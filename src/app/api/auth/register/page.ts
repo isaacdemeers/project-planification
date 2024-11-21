@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import { signUpSchema } from '@/lib/auth/schemas'
 import { saltAndHashPassword } from '@/lib/auth/utils'
 import { Prisma } from '@prisma/client'
@@ -7,9 +7,12 @@ import { Prisma } from '@prisma/client'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
+
+        // Valider les données avec le schéma
         const validatedData = await signUpSchema.parseAsync(body)
 
-        const existingUser = await db.user.findUnique({
+        // Vérifier si l'email existe déjà
+        const existingUser = await prisma.user.findUnique({
             where: { email: validatedData.email }
         })
 
@@ -20,33 +23,41 @@ export async function POST(request: Request) {
             )
         }
 
+        // Hasher le mot de passe
         const hashedPassword = saltAndHashPassword(validatedData.password)
 
-        const userData: Prisma.UserCreateInput = {
-            email: validatedData.email,
-            password: hashedPassword,
-            // name: validatedData.name,
-            // fullName: validatedData.fullName,
-        }
-
-        const user = await db.user.create({
-            data: userData,
-            select: {
-                id: true,
-                email: true,
-                // name: true,
-                // fullName: true,
-                createdAt: true,
-            }
+        // Créer l'utilisateur
+        const user = await prisma.user.create({
+            data: {
+                email: validatedData.email,
+                password: hashedPassword,
+                name: validatedData.name,
+                fullName: validatedData.fullName,
+            },
         })
 
-        return NextResponse.json(user, { status: 201 })
+        // Retourner l'utilisateur sans le mot de passe
+        const { password: _, ...userWithoutPassword } = user
+
+        return NextResponse.json(userWithoutPassword, { status: 201 })
     } catch (error) {
-        console.error('Erreur lors de l\'inscription:', error)
+        // Log l'erreur complète pour le débogage
+        console.error('Erreur détaillée:', error)
 
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             return NextResponse.json(
-                { message: 'Erreur de base de données' },
+                {
+                    message: 'Erreur de base de données',
+                    code: error.code,
+                    meta: error.meta
+                },
+                { status: 400 }
+            )
+        }
+
+        if (error instanceof Error) {
+            return NextResponse.json(
+                { message: error.message },
                 { status: 400 }
             )
         }
