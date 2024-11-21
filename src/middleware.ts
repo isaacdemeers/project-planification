@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get('next-auth.session-token')?.value
 
     // Liste des chemins publics qui ne nécessitent pas d'authentification
-    const publicPaths = ['/login', '/register', '/', '/api/auth']
+    const publicPaths = ['/login', '/register', '/api/auth']
     const isPublicPath = publicPaths.some(path =>
         request.nextUrl.pathname.startsWith(path)
     )

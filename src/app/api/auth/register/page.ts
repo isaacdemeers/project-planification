@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import prisma from '@/lib/db'
 import { signUpSchema } from '@/lib/auth/schemas'
 import { saltAndHashPassword } from '@/lib/auth/utils'
 import { Prisma } from '@prisma/client'

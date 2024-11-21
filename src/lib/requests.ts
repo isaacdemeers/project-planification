@@ -1,13 +1,14 @@
-import prisma from "@/lib/prisma"
+import prisma from "@/lib/db"
 
 export async function GET() {
   try {
-    const intervenants = await prisma.intervenant.findMany()
-    return Response.json(intervenants)
+    const intervenants = await prisma.intervenant.findMany();
+    console.log(intervenants);
+    return intervenants;
   } catch (error) {
     return Response.json({ error: "Erreur lors de la récupération des intervenants" }, { status: 500 })
   }
-} 
+}
 
 // Ajouter un intervenant
 export async function addIntervenant(request: Request) {

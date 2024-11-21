@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { signInSchema } from './lib/auth/schemas'
 import { verifyPassword } from './lib/auth/utils'
-import { db } from './lib/db'
+import prisma from './lib/db'
 import type { User } from "@prisma/client"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -20,7 +20,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 try {
                     const { email, password } = await signInSchema.parseAsync(credentials)
 
-                    const user = await db.user.findUnique({
+                    const user = await prisma.user.findUnique({
                         where: { email }
                     })
 
